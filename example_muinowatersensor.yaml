@@ -1,0 +1,36 @@
+esphome:
+  name: muinowatersensor
+  friendly_name: muinowatersensor
+
+external_components:
+  - source:
+      type: git
+      url: https://github.com/martijnvwezel/watersensor.git
+      ref: master
+    components: [muinowatersensor]
+  - source:
+      type: local
+      path: my_components
+
+esp32:
+  board: esp32-c3-devkitm-1
+  framework:
+    type: arduino
+
+
+sensor:
+  - platform: adc
+    id: adc_1
+    pin: GPIO2
+  - platform: adc
+    id: adc_1
+    pin: GPIO3
+  - platform: adc
+    id: adc_1
+    pin: GPIO4
+  - platform: muino
+    name: Water
+    adc1: adc_1
+    adc2: adc_2
+    adc3: adc_3
+
