@@ -1,20 +1,48 @@
 #include "MuinoWaterSensor.h"
 
 void MuinoWaterSensor::setup() override {
-    this->state.phase  = 0;
-    this->state.fine   = 0;
-    this->state.liters = 0;
 
-    this->state.a_min = 0;
-    this->state.b_min = 0;
-    this->state.c_min = 0;
+    pinMode(SENS_A, INPUT); // ADC 0
+    pinMode(SENS_B, INPUT); // ADC 1
+    pinMode(SENS_C, INPUT); // ADC 2
 
-    this->state.a_max = 0;
-    this->state.b_max = 0;
-    this->state.c_max = 0;
+    analogSetPinAttenuation(SENS_A, ADC_0db);
+    analogSetPinAttenuation(SENS_B, ADC_0db);
+    analogSetPinAttenuation(SENS_C, ADC_0db);
+
+
+    pinMode(LED, OUTPUT);
+    digitalWrite(LED, LOW);
+
+    pinMode(LIGHT_SEN_ENABLE, OUTPUT);
+    digitalWrite(LIGHT_SEN_ENABLE, HIGH);
+    }
+
+void MuinoWaterSensor::loop() override {
+
+    digitalWrite(LED, HIGH);
+    delay(5);
+    this->sen_a = analogReadMilliVolts(SENS_A);
+    this->sen_b = analogReadMilliVolts(SENS_B);
+    this->sen_c = analogReadMilliVolts(SENS_C);
+
+    digitalWrite(LED, LOW);
+    delay(5);
+
+    int32_t sen_a_zero = analogReadMilliVolts(SENS_A);
+    int32_t sen_b_zero = analogReadMilliVolts(SENS_B);
+    int32_t sen_c_zero = analogReadMilliVolts(SENS_C);
+
+    this->sen_a = this->sen_a - sen_a_zero;
+    this->sen_b = this->sen_b - sen_b_zero;
+    this->sen_c = this->sen_c - sen_c_zero;
+
+    bool send = convert_adc_to_liters(sen_a, sen_b, sen_c);
 }
 
-int MuinoWaterSensor::magic_code_box(int sen_a, int sen_b, int sen_c) {
+
+
+int MuinoWaterSensor::convert_adc_to_liters(int sen_a, int sen_b, int sen_c) {
     // * Liter berekening
     // * asin^2(σ)+bsin^2(σ+π/3)+c*sin^3(σ-π/3)
     // * a⋅sin²(σ±ε)+b⋅sin²(σ±ε+π/3)+c⋅sin²(σ±ε-π/3)
@@ -37,7 +65,7 @@ int MuinoWaterSensor::magic_code_box(int sen_a, int sen_b, int sen_c) {
     }
 
     float alpha_cor = 0.01;
-    if (this->mili_liters_total < 2) {
+    if (this->liter < 2) {
         alpha_cor = 0.1; // when 2 liter not found correct harder
         if (this->state.liters < 0) {
             this->state.liters = 0;
@@ -68,8 +96,7 @@ int MuinoWaterSensor::magic_code_box(int sen_a, int sen_b, int sen_c) {
     float liters_float_coarse = (float)this->state.liters + ((float)this->state.liters / 6);
     float liters_float_fine   = (float)this->state.liters + ((float)this->state.phase / 6) + ((float)this->state.fine / (16 * 6));
 
-    uint32_t mililiters     = (uint32_t)(liters_float_fine * 1000);
-    this->mili_liters_total = mililiters;
+    this->liter = liters_float_fine;
 
     return 1;
 }
