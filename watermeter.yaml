@@ -1,0 +1,31 @@
+esphome:
+  name: watersensor
+  friendly_name: watersensor
+  includes:
+    - my_custom_component.h
+  platformio_options:
+    board_build.flash_mode: qio
+
+sensor:
+  - platform: custom
+    lambda: |-
+      auto my_custom = new MyCustomSensor();
+      App.register_component(my_custom);
+      return {my_custom->water_liter_sensor, my_custom->sensa, my_custom->sensb, my_custom->sensc};
+
+    sensors:
+      - name: "water_liter_sensor"
+        unit_of_measurement: L
+        state_class: total_increasing
+        device_class: water
+        accuracy_decimals: 2
+      - name: "sensa"
+        accuracy_decimals: 2
+      - name: "sensb"
+        accuracy_decimals: 2
+      - name: "sensc"
+        accuracy_decimals: 2
+esp32:
+  board: seeed_xiao_esp32c3
+  framework:
+    type: arduino
