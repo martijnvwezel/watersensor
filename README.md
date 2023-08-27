@@ -1,3 +1,5 @@
+
+# OUTDATED REPO GO TO : https://github.com/martijnvwezel/watermeter-esphome/tree/main
 # watersensor
 
 
